@@ -15,7 +15,7 @@ pub(crate) enum SqlBuilder {
     Failed(String),
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub(crate) enum Part {
     Arg,
     Fields,

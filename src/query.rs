@@ -11,7 +11,7 @@ use crate::{
     Client,
 };
 
-const MAX_QUERY_LEN_TO_USE_GET: usize = 8192;
+pub(crate) const MAX_QUERY_LEN_TO_USE_GET: usize = 8192;
 
 #[must_use]
 #[derive(Clone)]
@@ -38,6 +38,10 @@ impl Query {
     pub fn bind(mut self, value: impl Bind) -> Self {
         self.sql.bind_arg(value);
         self
+    }
+
+    pub fn bind_ref(&mut self, value: impl Bind) {
+        self.sql.bind_arg(value);
     }
 
     /// Executes the query.
@@ -117,7 +121,6 @@ impl Query {
 
     pub(crate) fn do_execute(self, read_only: bool) -> Result<Response> {
         let query = self.sql.finish()?;
-
         let mut url =
             Url::parse(&self.client.url).map_err(|err| Error::InvalidParams(Box::new(err)))?;
         let mut pairs = url.query_pairs_mut();
