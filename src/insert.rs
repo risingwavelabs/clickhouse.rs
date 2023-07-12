@@ -178,7 +178,10 @@ impl<T> Insert<T> {
         }
     }
 
-    pub fn write_row_binary<'a>(&'a mut self,buff: BytesMut) -> impl Future<Output = Result<()>> + 'a + Send{
+    pub fn write_row_binary<'a>(
+        &'a mut self,
+        buff: BytesMut,
+    ) -> impl Future<Output = Result<()>> + 'a + Send {
         assert!(self.sender.is_some(), "write() after error");
 
         self.buffer.extend(buff);

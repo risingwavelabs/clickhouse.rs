@@ -14,16 +14,16 @@ impl Update {
         flieds_names: Vec<String>,
     ) -> Self {
         let mut out: String = flieds_names.iter().enumerate().fold(
-            format!("ALTER TABLE {table_name} UPDATE "),
+            format!("ALTER TABLE {table_name} UPDATE"),
             |mut res, (idx, key)| {
                 if idx > 0 {
                     res.push(',');
                 }
-                res.push_str(&format!("{key} = ?"));
+                res.push_str(&format!(" {key} = ?"));
                 res
             },
         );
-        out.push_str(&format!("where {pk_name} = ?"));
+        out.push_str(&format!(" where {pk_name} = ?"));
         let query = Query::new(client, &out);
         Self { query }
     }
@@ -45,10 +45,16 @@ impl Update {
                 Fileds::F64(v) => self.query.bind_ref(v),
                 Fileds::Char(v) => self.query.bind_ref(v),
                 Fileds::String(v) => self.query.bind_ref(v),
-                // Fileds::Vec(v) => {
-                //     let mut vec = vec![];
-                //     vec
-                // },
+                Fileds::Vec(_) => {
+                    todo!()
+                }
+                Fileds::Str(v) => {
+                    self.query.bind_str(v);
+                }
+                Fileds::Date(v) => self.query.bind_ref(v),
+                Fileds::Date32(v) => self.query.bind_ref(v),
+                Fileds::DateTime(v) => self.query.bind_ref(v),
+                Fileds::DateTime64(v) => self.query.bind_ref(v),
                 // Fileds::DateTime(v) => todo!(),
             };
         });
@@ -72,6 +78,10 @@ pub enum Fileds {
     F64(f64),
     Char(char),
     String(String),
-    // Vec(Vec<Fileds>),
-    // DateTime(DateTime),
+    Vec(Vec<Fileds>),
+    Date(u16),
+    Date32(i32),
+    DateTime(u32),
+    DateTime64(i64),
+    Str(String),
 }

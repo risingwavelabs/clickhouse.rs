@@ -44,6 +44,10 @@ impl Query {
         self.sql.bind_arg(value);
     }
 
+    pub fn bind_str(&mut self, str: &str) {
+        self.sql.bind_str(str);
+    }
+
     /// Executes the query.
     pub async fn execute(self) -> Result<()> {
         self.do_execute(false)?.finish().await
