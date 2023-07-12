@@ -16,7 +16,7 @@ use crate::{
     rowbinary, Client, Compression,
 };
 
-const BUFFER_SIZE: usize = 128 * 1024;
+pub(crate) const BUFFER_SIZE: usize = 128 * 1024;
 const MIN_CHUNK_SIZE: usize = BUFFER_SIZE - 1024; // slightly less to avoid extra reallocations
 
 /// Performs only one `INSERT`.
@@ -171,6 +171,21 @@ impl<T> Insert<T> {
 
         async move {
             result?;
+            if self.buffer.len() >= MIN_CHUNK_SIZE {
+                self.send_chunk().await?;
+            }
+            Ok(())
+        }
+    }
+
+    pub fn write_row_binary<'a>(
+        &'a mut self,
+        buff: BytesMut,
+    ) -> impl Future<Output = Result<()>> + 'a + Send {
+        assert!(self.sender.is_some(), "write() after error");
+
+        self.buffer.extend(buff);
+        async move {
             if self.buffer.len() >= MIN_CHUNK_SIZE {
                 self.send_chunk().await?;
             }

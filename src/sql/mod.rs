@@ -15,7 +15,7 @@ pub(crate) enum SqlBuilder {
     Failed(String),
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub(crate) enum Part {
     Arg,
     Fields,
@@ -55,6 +55,18 @@ impl SqlBuilder {
                     return;
                 }
 
+                *size += s.len();
+                *part = Part::Text(s);
+            } else {
+                panic!("all query arguments are already bound");
+            }
+        }
+    }
+
+    pub(crate) fn bind_str(&mut self, value: &str) {
+        if let Self::InProgress { parts, size } = self {
+            if let Some(part) = parts.iter_mut().find(|p| matches!(p, Part::Arg)) {
+                let s = String::from(value);
                 *size += s.len();
                 *part = Part::Text(s);
             } else {

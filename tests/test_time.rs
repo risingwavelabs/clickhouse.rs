@@ -1,6 +1,12 @@
 #![cfg(feature = "time")]
 
+use bytes::BufMut;
+use bytes::BytesMut;
+use clickhouse::update::Fileds;
+use core::{assert_eq, time::Duration};
 use std::ops::RangeBounds;
+use std::thread::sleep;
+use time::Month;
 
 use rand::{distributions::Standard, Rng};
 use serde::{Deserialize, Serialize};
@@ -234,4 +240,84 @@ fn generate_dates(years: impl RangeBounds<i32>, count: usize) -> Vec<Date> {
 
     dates.sort_unstable();
     dates
+}
+
+#[common::named]
+#[tokio::test]
+async fn test_insert_update_time() {
+    let client = common::prepare_database!();
+
+    #[derive(Debug, Row, Serialize, Deserialize)]
+    struct MyRow {
+        no: u32,
+        #[serde(with = "clickhouse::serde::time::date32")]
+        date: Date,
+        #[serde(with = "clickhouse::serde::time::datetime")]
+        dt: OffsetDateTime,
+        #[serde(with = "clickhouse::serde::time::datetime64::secs")]
+        dt64s: OffsetDateTime,
+    }
+
+    // Create a table.
+    client
+        .query(
+            "
+            CREATE TABLE test(no UInt32 , date Date32 , dt DateTime , dt64s DateTime64(0))
+            ENGINE = MergeTree
+            ORDER BY no
+        ",
+        )
+        .execute()
+        .await
+        .unwrap();
+
+    // Write to the table.
+    let mut insert = client.insert::<MyRow>("test").unwrap();
+    let mut buffer = BytesMut::with_capacity(128 * 1024);
+    buffer.put_i32_le(1);
+    buffer.put_i32_le(13000);
+    buffer.put_u32_le(1300000000);
+    buffer.put_i64_le(1300000000);
+    insert.write_row_binary(buffer).await.unwrap();
+    insert.end().await.unwrap();
+
+    sleep(Duration::from_secs(1));
+    let mut cursor = client
+        .query("SELECT ?fields FROM test")
+        .fetch::<MyRow>()
+        .unwrap();
+
+    while let Some(row) = cursor.next().await.unwrap() {
+        assert_eq!(
+            row.date,
+            Date::from_calendar_date(2005, Month::August, 5).unwrap()
+        );
+        assert_eq!(row.dt, datetime!(2011-03-13 7:06:40 UTC),);
+        assert_eq!(row.dt64s, datetime!(2011-03-13 7:06:40 UTC),);
+    }
+    let update = client.update(
+        "test",
+        "no",
+        vec![format!("date"), format!("dt"), format!("dt64s")],
+    );
+    let vec = vec![
+        Fileds::Date(12000),
+        Fileds::DateTime(1200000000),
+        Fileds::DateTime64(1200000000),
+    ];
+    update.update_fileds(vec, 1 as u64).await.unwrap();
+    sleep(Duration::from_secs(1));
+    let mut cursor = client
+        .query("SELECT ?fields FROM test")
+        .fetch::<MyRow>()
+        .unwrap();
+
+    while let Some(row) = cursor.next().await.unwrap() {
+        assert_eq!(
+            row.date,
+            Date::from_calendar_date(2002, Month::November, 9).unwrap()
+        );
+        assert_eq!(row.dt, datetime!(2008-01-10 21:20:00 UTC),);
+        assert_eq!(row.dt64s, datetime!(2008-01-10 21:20:00 UTC),);
+    }
 }

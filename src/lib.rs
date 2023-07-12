@@ -17,6 +17,7 @@ pub use clickhouse_derive::Row;
 pub use self::{compression::Compression, row::Row};
 use self::{error::Result, http_client::HttpClient};
 
+pub mod delete;
 pub mod error;
 pub mod insert;
 pub mod inserter;
@@ -25,6 +26,7 @@ pub mod serde;
 pub mod sql;
 #[cfg(feature = "test-util")]
 pub mod test;
+pub mod update;
 #[cfg(feature = "watch")]
 pub mod watch;
 
@@ -196,6 +198,23 @@ impl Client {
     /// Starts a new SELECT/DDL query.
     pub fn query(&self, query: &str) -> query::Query {
         query::Query::new(self, query)
+    }
+
+    pub fn get_buffer_size(&self) -> usize{
+        insert::BUFFER_SIZE
+    }
+
+    pub fn delete(&self, table_name: &str, pk_name: &str, delete_pk: Vec<u64>) -> delete::Delete {
+        delete::Delete::new(self, table_name, pk_name, delete_pk)
+    }
+
+    pub fn update(
+        &self,
+        table_name: &str,
+        pk_name: &str,
+        flieds_name: Vec<String>,
+    ) -> update::Update {
+        update::Update::new(self, table_name, pk_name, flieds_name)
     }
 
     /// Starts a new WATCH query.
