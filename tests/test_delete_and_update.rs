@@ -86,7 +86,6 @@ async fn test_update_delete() {
         .unwrap();
 
     while let Some(row) = cursor.next().await.unwrap() {
-
         if row.no >= 700 && row.no < 750 {
             assert_eq!(row.name, "name");
             assert_eq!(row.list, vec![2, 5, 8]);

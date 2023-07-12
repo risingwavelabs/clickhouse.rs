@@ -4,8 +4,8 @@ use bytes::BufMut;
 use bytes::BytesMut;
 use clickhouse::update::Fileds;
 use core::{assert_eq, time::Duration};
-use std::thread::sleep;
 use std::ops::RangeBounds;
+use std::thread::sleep;
 use time::Month;
 
 use rand::{distributions::Standard, Rng};
