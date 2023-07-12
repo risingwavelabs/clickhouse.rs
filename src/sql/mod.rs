@@ -63,6 +63,7 @@ impl SqlBuilder {
         }
     }
 
+
     pub(crate) fn bind_fields<T: Row>(&mut self) {
         if let Self::InProgress { parts, size } = self {
             if let Some(fields) = row::join_column_names::<T>() {

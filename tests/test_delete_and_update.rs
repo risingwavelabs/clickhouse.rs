@@ -1,9 +1,12 @@
 use core::time::Duration;
 use std::{collections::HashSet, thread::sleep};
 
+use bytes::{BytesMut, BufMut};
 use serde::{Deserialize, Serialize};
 
 use clickhouse::{update::Fileds, Row};
+use serde_bytes::ByteBuf;
+use time::{OffsetDateTime, Date};
 
 mod common;
 
@@ -80,4 +83,69 @@ async fn commod() {
             assert_eq!(row.name, "foo");
         }
     }
+}
+
+#[common::named]
+#[tokio::test]
+async fn test_insert() {
+    let client = common::prepare_database!();
+
+    #[derive(Debug, Row, Serialize, Deserialize)]
+    struct MyRow {
+        no: u32,
+        date: Vec<i32>,
+    }
+
+    // Create a table.
+    client
+        .query(
+            "
+            CREATE TABLE test(no UInt32, date Array(UInt32))
+            ENGINE = MergeTree
+            ORDER BY no
+        ",
+        )
+        .execute()
+        .await
+        .unwrap();
+
+    // Write to the table.
+    let mut insert = client.insert::<MyRow>("test").unwrap();
+    for i in 0..10{
+        println!("{:?}",i);
+        let vec = vec![1,2,3,4];
+        let mut buffer = BytesMut::with_capacity(128 * 1024);
+        buffer.put_i32_le(i);
+        put_unsigned_leb128(&mut buffer, vec.len() as u64);
+        vec.iter().for_each(|&v|{
+            buffer.put_i32_le(v);
+        });
+        insert.write_row_binary(buffer).await.unwrap();
+    }
+    insert.end().await.unwrap();
+
+    sleep(Duration::from_secs(1));
+    let mut cursor = client
+        .query("SELECT ?fields FROM test")
+        .fetch::<MyRow>()
+        .unwrap();
+
+    while let Some(row) = cursor.next().await.unwrap() {
+        println!("row{:?}",row);
+    }
+    
+}
+pub fn put_unsigned_leb128(mut buffer: impl BufMut, mut value: u64) {
+    while {
+        let mut byte = value as u8 & 0x7f;
+        value >>= 7;
+
+        if value != 0 {
+            byte |= 0x80;
+        }
+
+        buffer.put_u8(byte);
+
+        value != 0
+    } {}
 }

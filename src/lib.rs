@@ -27,7 +27,6 @@ pub mod sql;
 #[cfg(feature = "test-util")]
 pub mod test;
 pub mod update;
-pub mod update_serializer;
 #[cfg(feature = "watch")]
 pub mod watch;
 

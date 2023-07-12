@@ -178,6 +178,18 @@ impl<T> Insert<T> {
         }
     }
 
+    pub fn write_row_binary<'a>(&'a mut self,buff: BytesMut) -> impl Future<Output = Result<()>> + 'a + Send{
+        assert!(self.sender.is_some(), "write() after error");
+
+        self.buffer.extend(buff);
+        async move {
+            if self.buffer.len() >= MIN_CHUNK_SIZE {
+                self.send_chunk().await?;
+            }
+            Ok(())
+        }
+    }
+
     /// Ends `INSERT`.
     /// Succeeds if the server returns 200.
     ///
