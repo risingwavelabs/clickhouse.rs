@@ -200,6 +200,10 @@ impl Client {
         query::Query::new(self, query)
     }
 
+    pub fn get_buffer_size(&self) -> usize{
+        insert::BUFFER_SIZE
+    }
+
     pub fn delete(&self, table_name: &str, pk_name: &str, delete_pk: Vec<u64>) -> delete::Delete {
         delete::Delete::new(self, table_name, pk_name, delete_pk)
     }

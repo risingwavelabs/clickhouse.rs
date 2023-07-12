@@ -16,7 +16,7 @@ use crate::{
     rowbinary, Client, Compression,
 };
 
-const BUFFER_SIZE: usize = 128 * 1024;
+pub(crate) const BUFFER_SIZE: usize = 128 * 1024;
 const MIN_CHUNK_SIZE: usize = BUFFER_SIZE - 1024; // slightly less to avoid extra reallocations
 
 /// Performs only one `INSERT`.

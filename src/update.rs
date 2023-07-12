@@ -55,7 +55,6 @@ impl Update {
                 Fileds::Date32(v) => self.query.bind_ref(v),
                 Fileds::DateTime(v) => self.query.bind_ref(v),
                 Fileds::DateTime64(v) => self.query.bind_ref(v),
-                // Fileds::DateTime(v) => todo!(),
             };
         });
         self.query.bind_ref(pk_name);
