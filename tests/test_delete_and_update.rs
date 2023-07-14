@@ -49,15 +49,20 @@ async fn test_update_delete() {
     insert.end().await.unwrap();
 
     let mut pk_vec = vec![];
-    for i in 0..10 {
-        pk_vec.push(i as u64)
-    }
-    pk_vec.push(567 as u64);
-    pk_vec.push(545 as u64);
-    pk_vec.push(674 as u64);
-    pk_vec.push(873 as u64);
+    let mut set = HashSet::new();
+    for i in 0..100 {
+        set.insert(i);
+        pk_vec.push(Fileds::U64(i as u64))
+    };
+    pk_vec.push(Fileds::U64(567 as u64));
+    set.insert(567 as u64);
+    pk_vec.push(Fileds::U64(545 as u64));
+    set.insert(545 as u64);
+    pk_vec.push(Fileds::U64(674 as u64));
+    set.insert(674 as u64);
+    pk_vec.push(Fileds::U64(873 as u64));
+    set.insert(873 as u64);
 
-    let set: HashSet<u64> = pk_vec.iter().map(|x| *x).collect();
     let delete = client.delete("test", "no", pk_vec);
     delete.delete().await.unwrap();
     sleep(Duration::from_secs(1));
@@ -73,12 +78,12 @@ async fn test_update_delete() {
     for i in 700..750 {
         let update = client.update("test", "no", vec![format!("name"), format!("list")]);
         let vec = vec![
-            Fileds::String(format!("name")),
+            Fileds::String(format!("name1")),
             Fileds::Str(format!("[2,5,8]")),
         ];
         update.update_fileds(vec, i as u64).await.unwrap();
     }
-    sleep(Duration::from_secs(1));
+    sleep(Duration::from_secs(2));
 
     let mut cursor = client
         .query("SELECT ?fields FROM test")
@@ -87,7 +92,7 @@ async fn test_update_delete() {
 
     while let Some(row) = cursor.next().await.unwrap() {
         if row.no >= 700 && row.no < 750 {
-            assert_eq!(row.name, "name");
+            assert_eq!(row.name, "name1");
             assert_eq!(row.list, vec![2, 5, 8]);
         } else {
             assert_eq!(row.name, "foo");
