@@ -1,10 +1,10 @@
-use crate::{error::Result, query::Query, Client};
+use crate::{error::Result, query::Query, Client, update::Fileds};
 
 #[must_use]
 #[derive(Clone)]
 pub struct Delete {
     query: Query,
-    delete_pk: Vec<u64>,
+    delete_pk: Vec<Fileds>,
 }
 
 impl Delete {
@@ -12,7 +12,7 @@ impl Delete {
         client: &Client,
         table_name: &str,
         pk_name: &str,
-        delete_pk: Vec<u64>,
+        delete_pk: Vec<Fileds>,
     ) -> Self {
         let mut out = delete_pk.iter().enumerate().fold(
             format!("ALTER TABLE {table_name} DELETE WHERE {pk_name} in ("),
@@ -30,7 +30,7 @@ impl Delete {
     }
     pub async fn delete(mut self) -> Result<()> {
         self.delete_pk.clone().iter().for_each(|a| {
-            self.query.bind_ref(a);
+            a.bind_fields(&mut self.query);
         });
         self.query.execute().await
     }

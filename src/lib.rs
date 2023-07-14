@@ -13,6 +13,7 @@ use hyper::client::connect::HttpConnector;
 use hyper_tls::HttpsConnector;
 
 pub use clickhouse_derive::Row;
+use update::Fileds;
 
 pub use self::{compression::Compression, row::Row};
 use self::{error::Result, http_client::HttpClient};
@@ -204,7 +205,7 @@ impl Client {
         insert::BUFFER_SIZE
     }
 
-    pub fn delete(&self, table_name: &str, pk_name: &str, delete_pk: Vec<u64>) -> delete::Delete {
+    pub fn delete(&self, table_name: &str, pk_name: &str, delete_pk: Vec<Fileds>) -> delete::Delete {
         delete::Delete::new(self, table_name, pk_name, delete_pk)
     }
 
