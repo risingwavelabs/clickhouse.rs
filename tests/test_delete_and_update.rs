@@ -4,7 +4,7 @@ use std::{collections::HashSet, thread::sleep};
 use bytes::{BufMut, BytesMut};
 use serde::{Deserialize, Serialize};
 
-use clickhouse::{update::Fileds, Row};
+use clickhouse::{update::Field, Row};
 
 mod common;
 
@@ -52,15 +52,15 @@ async fn test_update_delete() {
     let mut set = HashSet::new();
     for i in 0..100 {
         set.insert(i);
-        pk_vec.push(Fileds::U64(i as u64))
+        pk_vec.push(Field::U64(i as u64))
     };
-    pk_vec.push(Fileds::U64(567 as u64));
+    pk_vec.push(Field::U64(567 as u64));
     set.insert(567 as u64);
-    pk_vec.push(Fileds::U64(545 as u64));
+    pk_vec.push(Field::U64(545 as u64));
     set.insert(545 as u64);
-    pk_vec.push(Fileds::U64(674 as u64));
+    pk_vec.push(Field::U64(674 as u64));
     set.insert(674 as u64);
-    pk_vec.push(Fileds::U64(873 as u64));
+    pk_vec.push(Field::U64(873 as u64));
     set.insert(873 as u64);
 
     let delete = client.delete("test", "no", pk_vec);
@@ -78,10 +78,10 @@ async fn test_update_delete() {
     for i in 700..750 {
         let update = client.update("test", "no", vec![format!("name"), format!("list")]);
         let vec = vec![
-            Fileds::String(format!("name1")),
-            Fileds::Str(format!("[2,5,8]")),
+            Field::String(format!("name1")),
+            Field::Customize(format!("[2,5,8]")),
         ];
-        update.update_fileds(vec, i as u64).await.unwrap();
+        update.update_fields(vec, i as u64).await.unwrap();
     }
     sleep(Duration::from_secs(2));
 
