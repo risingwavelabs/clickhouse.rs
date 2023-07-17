@@ -2,7 +2,7 @@
 
 use bytes::BufMut;
 use bytes::BytesMut;
-use clickhouse::update::Fileds;
+use clickhouse::update::Field;
 use core::{assert_eq, time::Duration};
 use std::ops::RangeBounds;
 use std::thread::sleep;
@@ -301,11 +301,11 @@ async fn test_insert_update_time() {
         vec![format!("date"), format!("dt"), format!("dt64s")],
     );
     let vec = vec![
-        Fileds::Date(12000),
-        Fileds::DateTime(1200000000),
-        Fileds::DateTime64(1200000000),
+        Field::Date(12000),
+        Field::DateTime(1200000000),
+        Field::DateTime64(1200000000),
     ];
-    update.update_fileds(vec, 1 as u64).await.unwrap();
+    update.update_fields(vec, 1 as u64).await.unwrap();
     sleep(Duration::from_secs(1));
     let mut cursor = client
         .query("SELECT ?fields FROM test")
