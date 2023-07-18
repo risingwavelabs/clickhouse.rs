@@ -201,7 +201,7 @@ impl Client {
         query::Query::new(self, query)
     }
 
-    pub fn get_buffer_size(&self) -> usize{
+    pub fn get_buffer_size(&self) -> usize {
         insert::BUFFER_SIZE
     }
 

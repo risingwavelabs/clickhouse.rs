@@ -1,4 +1,4 @@
-use crate::{error::Result, query::Query, Client, update::Field};
+use crate::{error::Result, query::Query, update::Field, Client};
 
 #[must_use]
 #[derive(Clone)]

@@ -60,7 +60,7 @@ pub enum Field {
     Customize(String),
 }
 impl Field {
-    pub fn bind_fields(&self,query:&mut Query){
+    pub fn bind_fields(&self, query: &mut Query) {
         match self {
             Field::Bool(v) => query.bind_ref(v),
             Field::I8(v) => query.bind_ref(v),

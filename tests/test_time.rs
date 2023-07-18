@@ -305,7 +305,10 @@ async fn test_insert_update_time() {
         Field::DateTime(1200000000),
         Field::DateTime64(1200000000),
     ];
-    update.update_fields(vec, 1 as u64).await.unwrap();
+    update
+        .update_fields(vec, clickhouse::update::Field::U64(1 as u64))
+        .await
+        .unwrap();
     sleep(Duration::from_secs(1));
     let mut cursor = client
         .query("SELECT ?fields FROM test")

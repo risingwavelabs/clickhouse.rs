@@ -53,7 +53,7 @@ async fn test_update_delete() {
     for i in 0..100 {
         set.insert(i);
         pk_vec.push(Field::U64(i as u64))
-    };
+    }
     pk_vec.push(Field::U64(567 as u64));
     set.insert(567 as u64);
     pk_vec.push(Field::U64(545 as u64));
@@ -81,7 +81,10 @@ async fn test_update_delete() {
             Field::String(format!("name1")),
             Field::Customize(format!("[2,5,8]")),
         ];
-        update.update_fields(vec, i as u64).await.unwrap();
+        update
+            .update_fields(vec, Field::U64(i as u64))
+            .await
+            .unwrap();
     }
     sleep(Duration::from_secs(2));
 
@@ -109,14 +112,14 @@ async fn test_insert() {
     #[derive(Debug, Row, Serialize, Deserialize)]
     struct MyRow {
         no: u32,
-        date: Vec<i32>,
+        list: Vec<i32>,
     }
 
     // Create a table.
     client
         .query(
             "
-            CREATE TABLE test(no UInt32, date Array(UInt32))
+            CREATE TABLE test(no UInt32, list Array(UInt32))
             ENGINE = MergeTree
             ORDER BY no
         ",
@@ -146,7 +149,7 @@ async fn test_insert() {
         .unwrap();
 
     while let Some(row) = cursor.next().await.unwrap() {
-        println!("row{:?}", row);
+        assert_eq!(row.list, vec![1, 2, 3, 4]);
     }
 }
 pub fn put_unsigned_leb128(mut buffer: impl BufMut, mut value: u64) {
