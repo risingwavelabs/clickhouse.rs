@@ -7,6 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <!-- next-header -->
 
 ## [Unreleased] - ReleaseDate
+### Added
+- derive: support `serde::skip_deserializing` ([#83]).
+- insert: apply options set on the client ([#90]).
+- inserter: can be limited by size, see `Inserter::with_max_bytes()`.
+- inserter: `Inserter::pending()` to get stats about still being inserted data.
+- inserter: `Inserter::force_commit()` to commit and insert immediately.
+
+### Changed
+- **BREAKING** inserter: move under the `inserter` feature.
+- **BREAKING** inserter: there is no default limits anymore.
+- **BREAKING** inserter: `Inserter::write` is synchronous now.
+- **BREAKING** inserter: rename `entries` to `rows`.
+- **BREAKING** drop the `wa-37420` feature.
+- **BREAKING** remove deprecated items.
+- inserter: improve performance of time measurements by using `quanta`.
+- inserter: improve performance if the time limit isn't used.
+- derive: move to syn v2.
+
+### Fixed
+- watch: support a new syntax.
+
+[#83]: https://github.com/loyd/clickhouse.rs/pull/83
+[#90]: https://github.com/loyd/clickhouse.rs/pull/90
+
+## [0.11.6] - 2023-09-27
+### Fixed
+- client: accept HTTPs urls if `tls` feature is enabled ([#58]).
+
+[#58]: https://github.com/loyd/clickhouse.rs/issues/56
 
 ## [0.11.5] - 2023-06-12
 ### Changed
@@ -248,7 +277,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Client::query()` for selecting from tables and DDL statements.
 
 <!-- next-url -->
-[Unreleased]: https://github.com/loyd/clickhouse.rs/compare/v0.11.5...HEAD
+[Unreleased]: https://github.com/loyd/clickhouse.rs/compare/v0.11.6...HEAD
+[0.11.6]: https://github.com/loyd/clickhouse.rs/compare/v0.11.5...v0.11.6
 [0.11.5]: https://github.com/loyd/clickhouse.rs/compare/v0.11.4...v0.11.5
 [0.11.4]: https://github.com/loyd/clickhouse.rs/compare/v0.11.3...v0.11.4
 [0.11.3]: https://github.com/loyd/clickhouse.rs/compare/v0.11.2...v0.11.3
