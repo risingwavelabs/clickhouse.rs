@@ -69,7 +69,7 @@ inserter = ["dep:quanta"]
 watch = ["dep:sha-1", "dep:serde_json", "serde/derive"]
 uuid = ["dep:uuid"]
 time = ["dep:time"]
-lz4 = ["dep:lz4_flex", "dep:cityhash-rs"]
+lz4 = ["dep:lz4_flex", "dep:cityhash-rs", "dep:zstd"]
 chrono = ["dep:chrono"]
 futures03 = []
 
@@ -123,6 +123,7 @@ lz4_flex = { version = "0.11.1", default-features = false, features = [
     "std",
 ], optional = true }
 cityhash-rs = { version = "=1.0.1", optional = true } # exact version for safety
+zstd = { version = "0.13", default-features = false, optional = true }
 uuid = { version = "1", optional = true }
 time = { version = "0.3", optional = true }
 chrono = { version = "0.4", optional = true, features = ["serde"] }
