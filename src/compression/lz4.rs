@@ -113,6 +113,10 @@ impl Lz4Meta {
             return Err(Error::Decompression("too big compressed data".into()));
         }
 
+        if compressed_size < LZ4_HEADER_SIZE as u32 {
+            return Err(Error::Decompression("too small compressed data".into()));
+        }
+
         Ok(Lz4Meta {
             checksum,
             magic,
@@ -329,6 +333,27 @@ async fn it_verifies_checksum_before_decompressing() {
     source[30] ^= 0xff;
     let err = decode(&source).await.err().unwrap();
     assert!(err.to_string().contains("checksum mismatch"));
+}
+
+#[tokio::test]
+async fn it_rejects_compressed_size_smaller_than_header() {
+    for magic in [LZ4_MAGIC, ZSTD_MAGIC, NONE_MAGIC] {
+        for compressed_size in 0..LZ4_HEADER_SIZE as u32 {
+            let mut source = vec![0; LZ4_META_SIZE];
+            source[LZ4_CHECKSUM_SIZE] = magic;
+            source[LZ4_CHECKSUM_SIZE + 1..][..4].copy_from_slice(&compressed_size.to_le_bytes());
+            // The checksum matches, so only the size check keeps the block out
+            // of `read_data`, which would slice past the end of it.
+            let checksum = calc_checksum(&source[LZ4_CHECKSUM_SIZE..][..compressed_size as usize]);
+            source[..LZ4_CHECKSUM_SIZE].copy_from_slice(&checksum.to_le_bytes());
+
+            let err = decode(&source).await.err().unwrap();
+            assert!(
+                err.to_string().contains("too small compressed data"),
+                "method {magic:#04x}, compressed size {compressed_size}: {err}"
+            );
+        }
+    }
 }
 
 #[test]
