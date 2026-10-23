@@ -18,8 +18,8 @@ const MAX_COMPRESSED_SIZE: u32 = 1024 * 1024 * 1024;
 
 /// Decodes ClickHouse native compressed blocks.
 ///
-/// Despite the name, it accepts every method a server may use for a
-/// `compress=1` response. Since ClickHouse 26.9 that method follows
+/// Despite the name, it also decodes ZSTD and NONE blocks: since ClickHouse
+/// 26.9 the method of a `compress=1` response follows
 /// `network_compression_method`, which defaults to ZSTD.
 pub(crate) struct Lz4Decoder<S> {
     stream: S,
@@ -130,7 +130,7 @@ impl Lz4Meta {
     }
 
     fn write_header(&self, mut buffer: &mut [u8]) {
-        buffer.put_u8(LZ4_MAGIC);
+        buffer.put_u8(self.magic);
         buffer.put_u32_le(self.compressed_size);
         buffer.put_u32_le(self.uncompressed_size);
     }
@@ -333,6 +333,22 @@ async fn it_verifies_checksum_before_decompressing() {
     source[30] ^= 0xff;
     let err = decode(&source).await.err().unwrap();
     assert!(err.to_string().contains("checksum mismatch"));
+}
+
+#[tokio::test]
+async fn it_checks_uncompressed_size() {
+    for mut source in [ZSTD_FRAME.to_vec(), none_frame()] {
+        // Both blocks hold 67 bytes; claim 68 and keep the checksum valid.
+        source[LZ4_CHECKSUM_SIZE + 5..LZ4_META_SIZE].copy_from_slice(&68u32.to_le_bytes());
+        let checksum = calc_checksum(&source[LZ4_CHECKSUM_SIZE..]);
+        source[..LZ4_CHECKSUM_SIZE].copy_from_slice(&checksum.to_le_bytes());
+
+        let err = decode(&source).await.err().unwrap();
+        assert!(
+            err.to_string().contains("uncompressed size mismatch"),
+            "{err}"
+        );
+    }
 }
 
 #[tokio::test]
